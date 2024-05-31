@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Three.js Room with Random Objects</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // Set up the scene, camera, and renderer
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Define the room size (assuming the room is a square for simplicity)
+    const roomSize = Math.sqrt(1000); // 1000 sqft area
+    const halfRoomSize = roomSize / 2;
+
+    // Create room floor
+    const floorGeometry = new THREE.PlaneGeometry(roomSize, roomSize);
+    const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, side: THREE.DoubleSide });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = Math.PI / 2; // Rotate to lie flat
+    scene.add(floor);
+
+    // Create room walls with different colors
+    const wallHeight = 10; // Arbitrary height for the walls
+    const wallMaterials = [
+        new THREE.MeshBasicMaterial({ color: 0xff0000 }), // Red
+        new THREE.MeshBasicMaterial({ color: 0x00ff00 }), // Green
+        new THREE.MeshBasicMaterial({ color: 0x0000ff }), // Blue
+        new THREE.MeshBasicMaterial({ color: 0xffa500 })  // Orange
+    ];
+
+    const createWall = (width, height, material) => {
+        return new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+    };
+
+    const wall1 = createWall(roomSize, wallHeight, wallMaterials[0]);
+    wall1.position.set(0, wallHeight / 2, -halfRoomSize);
+    scene.add(wall1);
+
+    const wall2 = createWall(roomSize, wallHeight, wallMaterials[1]);
+    wall2.position.set(0, wallHeight / 2, halfRoomSize);
+    wall2.rotation.y = Math.PI;
+    scene.add(wall2);
+
+    const wall3 = createWall(roomSize, wallHeight, wallMaterials[2]);
+    wall3.position.set(-halfRoomSize, wallHeight / 2, 0);
+    wall3.rotation.y = Math.PI / 2;
+    scene.add(wall3);
+
+    const wall4 = createWall(roomSize, wallHeight, wallMaterials[3]);
+    wall4.position.set(halfRoomSize, wallHeight / 2, 0);
+    wall4.rotation.y = -Math.PI / 2;
+    scene.add(wall4);
+
+    // Create random objects
+    const objectCount = 10; // Number of objects to place in the room
+    const objectSize = 2; // Arbitrary size for objects
+
+    const createRandomObject = () => {
+        const randomType = Math.floor(Math.random() * 3);
+        let geometry;
+        switch(randomType) {
+            case 0:
+                geometry = new THREE.BoxGeometry(objectSize, objectSize, objectSize);
+                break;
+            case 1:
+                geometry = new THREE.SphereGeometry(objectSize / 2, 32, 32);
+                break;
+            case 2:
+                geometry = new THREE.ConeGeometry(objectSize / 2, objectSize, 32);
+                break;
+            default:
+                geometry = new THREE.BoxGeometry(objectSize, objectSize, objectSize);
+        }
+        const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff });
+        return new THREE.Mesh(geometry, material);
+    };
+
+    for (let i = 0; i < objectCount; i++) {
+        const object = createRandomObject();
+        object.position.set(
+            Math.random() * roomSize - halfRoomSize,
+            object.geometry.parameters.height / 2 || objectSize / 2, // Adjust height if cone
+            Math.random() * roomSize - halfRoomSize
+        );
+        scene.add(object);
+    }
+
+    // Set camera position
+    camera.position.set(10, 15, 20);
+    camera.lookAt(0, 0, 0);
+
+    // Add light
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    pointLight.position.set(10, 20, 10);
+    scene.add(pointLight);
+
+    // Render the scene
+    const animate = () => {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+</body>
+</html>
